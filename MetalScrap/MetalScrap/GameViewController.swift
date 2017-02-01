@@ -8,6 +8,7 @@
 
 import Cocoa
 import MetalKit
+import simd
 
 let MaxBuffers = 3
 let ConstantBufferSize = 1024*1024
