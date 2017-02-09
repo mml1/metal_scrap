@@ -3,7 +3,7 @@ import Cocoa
 import MetalKit
 import simd
 
-
+// rotation z
 func rotationZ(rad: Float) -> float4x4 {
     return float4x4([
         float4( cos(rad), sin(rad), 0, 0),
@@ -13,7 +13,6 @@ func rotationZ(rad: Float) -> float4x4 {
 }
 
 // rotation y
-
 func rotationY(rad: Float) -> float4x4 {
     return float4x4([
         float4( cos(rad), 0, -sin(rad), 0),
