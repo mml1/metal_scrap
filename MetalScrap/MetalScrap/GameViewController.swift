@@ -3,132 +3,6 @@ import Cocoa
 import MetalKit
 import simd
 
-//// triangle shape
-//let vertexPositionData:[Float] =
-//[
-//    -0.0,   0.25, 0.5, 1.0,
-//    -0.25, -0.25, 0.5, 1.0,
-//     0.25, -0.25, 0.5, 1.0
-//]
-//// triangle color
-//let vertexColorData:[Float] =
-//[
-//    0.0, 0.0, 1.0, 1.0,
-//    0.0, 0.0, 0.0, 1.0,
-//    1.0, 0.0, 0.0, 1.0
-//]
-// used to center the photo image one the triangle
-//let vertexTextCoords:[Float] =
-//    [
-//        0.5, 0,
-//        0, 1,
-//        1,1
-//]
-
-// square shape
-let vertexPositionData:[Float] =
-    [
-        0.0, 1.0, 0.5, 1.0,
-        1.0, 1.0, 0.5, 1.0,
-        0.0, 0.0, 0.5, 1.0,
-        1.0, 0.0, 0.5, 1.0,
-        0.0, 0.0, 0.5, 1.0,
-        1.0, 1.0, 0.5, 1.0,
-        0.0, 1.0, 0.0, 1.0,
-        1.0, 1.0, 0.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 1.0, 0.0, 1.0,
-        0.0, 1.0, 0.5, 1.0,
-        0.0, 1.0, 0.0, 1.0,
-        1.0, 1.0, 0.0, 1.0,
-        1.0, 1.0, 0.0, 1.0,
-        1.0, 1.0, 0.5, 1.0,
-        0.0, 1.0, 0.5, 1.0,
-        0.0, 1.0, 0.5, 1.0,
-        0.0, 0.0, 0.5, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        0.0, 1.0, 0.5, 1.0,
-        0.0, 1.0, 0.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 0.5, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 0.5, 1.0,
-        1.0, 0.0, 0.5, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        1.0, 1.0, 0.5, 1.0,
-        1.0, 0.0, 0.5, 1.0,
-        1.0, 1.0, 0.0, 1.0,
-        1.0, 0.0, 0.5, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        1.0, 1.0, 0.0, 1.0
-]
-// square color
-let vertexColorData:[Float] =
-    [
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 0.0, 0.0, 1.0,
-        1.0, 0.0, 0.0, 1.0
-]
-
-// used to center the photo image one the triangle
-let vertexTextCoords:[Float] =
-    [
-        0, 0,
-        1, 0,
-        0, 1,
-        1, 1,
-        0, 1,
-        1, 0,
-        0, 0,
-        1, 0,
-        0, 1,
-        1, 1,
-        0, 1,
-        1, 0,
-        0, 0,
-        1, 0,
-        0, 1,
-        1, 1,
-        0, 1,
-        1, 0
-        
-]
 
 func rotationZ(rad: Float) -> float4x4 {
     return float4x4([
@@ -232,26 +106,10 @@ class GameViewController: NSViewController, MTKViewDelegate {
             print("Failed to create pipeline state, error \(error)")
         }
         
-        let vertexPositionSize = vertexPositionData.count * MemoryLayout<Float>.size
-        vertexPositionBuffer = device.makeBuffer(bytes: vertexPositionData, length: vertexPositionSize, options: [])
-        vertexPositionBuffer.label = "vertices"
-        
-        let vertexColorSize = vertexColorData.count * MemoryLayout<Float>.size
-        vertexColorBuffer = device.makeBuffer(bytes: vertexColorData, length: vertexColorSize, options: [])
-        vertexColorBuffer.label = "colors"
-        
-        
-        // load asset fifth
-        let vertexTextCoordSize = vertexTextCoords.count * MemoryLayout<Float>.size
-        textureCoordinateBuffer = device.makeBuffer(bytes: vertexTextCoords, length: vertexTextCoordSize, options: [])
-        textureCoordinateBuffer.label = "texture coodrinates"
         
         startTime = CACurrentMediaTime()
         
         let allocator = MTKMeshBufferAllocator(device: device)
-        
-        // creating mesh 121116, switching over to interleaved buffer that stores all the properities
-        //        let mdlMesh = MDLMesh.init(boxWithExtent: vector_float3(1,1,1), segments: vector_uint3(2,2,2), inwardNormals: false, geometryType: .triangles, allocator: allocator)
         
         let vertexDescriptor = MDLVertexDescriptor()
         vertexDescriptor.attributes[0] = MDLVertexAttribute(name: MDLVertexAttributePosition, format: .float3, offset: 0, bufferIndex: 0)
@@ -294,7 +152,6 @@ class GameViewController: NSViewController, MTKViewDelegate {
             
             let degreesToRadians = Float(M_PI / 180.0)
             
-            //            let rotationMatrix = rotationZ(rad: 0 * time * degreesToRadians)
             let rotationMatrix = rotationY(rad: 100 * time * degreesToRadians)
             
             let translate = translation(tx:0, ty:0,tz:-0.5)
@@ -309,10 +166,6 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.pushDebugGroup("draw morphing triangle")
             renderEncoder.setRenderPipelineState(pipelineState)
             
-            //Location of vertex data for render call
-            //            renderEncoder.setVertexBuffer(vertexPositionBuffer, offset: 0, at: 0)
-            //            renderEncoder.setVertexBuffer(vertexColorBuffer, offset:0 , at: 1)
-            //            renderEncoder.setVertexBuffer(textureCoordinateBuffer, offset: 0, at: 2)
             
             renderEncoder.setVertexBuffer(mtkMesh.vertexBuffers.first!.buffer, offset: mtkMesh.vertexBuffers.first!.offset, at: 0)
             //passing to shader, passing by address is the &
@@ -325,9 +178,6 @@ class GameViewController: NSViewController, MTKViewDelegate {
             //
             renderEncoder.setDepthStencilState(depthStencilState)
             
-            // used to draw the triangle or traingle strip
-            //renderEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: 1)
-            //            renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 36, instanceCount: 1)
             
             let submesh =  mtkMesh.submeshes.first!
             renderEncoder.drawIndexedPrimitives(type: .triangle, indexCount: submesh.indexCount, indexType: submesh.indexType, indexBuffer: submesh.indexBuffer.buffer, indexBufferOffset:submesh.indexBuffer.offset)

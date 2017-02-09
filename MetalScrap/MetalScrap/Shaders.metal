@@ -25,11 +25,7 @@ struct InputVertex
     packed_float2 texCoords;
 };
 
-//vertex FragmentParameters passThroughVertex(uint vid [[ vertex_id ]],
-//                                            constant float4* position  [[ buffer(0) ]],
-//                                            constant float4* color    [[ buffer(1) ]],
-//                                            constant float4x4 &modelMatrix [[buffer(3)]],
-//                                            constant packed_float2* texCoords [[buffer(2)]])
+
 vertex FragmentParameters passThroughVertex(uint vid [[ vertex_id ]],
                                             constant InputVertex* vertices  [[ buffer(0) ]],
                                             constant float4x4 &modelMatrix [[buffer(3)]])
@@ -57,8 +53,5 @@ fragment half4 passThroughFragment(FragmentParameters inFrag [[stage_in]],
     
     constexpr sampler sampler2d(coord::normalized, filter::linear, mip_filter::linear, address::repeat);
     return half4( (ambient + diffuse)* tex2d.sample(sampler2d, inFrag.texCoords));
-    
-    //    return half4(tex2d.sample(sampler2d, inFrag.texCoords));
-    //sample fxn if I look up at that coordinate what value do i get, return as float4 cast to half4 due to obligations
-    //    return half4(inFrag.color);
+
 };
