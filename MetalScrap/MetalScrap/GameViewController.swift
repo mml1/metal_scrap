@@ -16,9 +16,9 @@ func rotationZ(rad: Float) -> float4x4 {
 func rotationY(rad: Float) -> float4x4 {
     return float4x4([
         float4( cos(rad), 0, -sin(rad), 0),
-        float4( 0, 1, 0, 0),
-        float4(        sin(rad),0, cos(rad), 0),
-        float4(        0,        0, 0, 1)])
+        float4(        0, 1,         0, 0),
+        float4( sin(rad), 0, cos(rad),  0),
+        float4(        0,        0, 0,  1)])
 }
 
 // translation function
@@ -151,10 +151,10 @@ class GameViewController: NSViewController, MTKViewDelegate {
             
             let degreesToRadians = Float(M_PI / 180.0)
             
-            let rotationMatrix = rotationY(rad: 100 * time * degreesToRadians)
+            let rotationMatrix = rotationY(rad: 290 *  time * degreesToRadians)
             
             let translate = translation(tx:0, ty:0,tz:-0.5)
-            let inverseTranslate = translation(tx:0, ty:0, tz:0.5 * time)
+            let inverseTranslate = translation(tx:0, ty:0, tz:0.9 * time)
             
             //projection matrix
             let projection = projectionMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:1000);
@@ -179,8 +179,11 @@ class GameViewController: NSViewController, MTKViewDelegate {
             
             
             let submesh =  mtkMesh.submeshes.first!
-            renderEncoder.drawIndexedPrimitives(type: .triangle, indexCount: submesh.indexCount, indexType: submesh.indexType, indexBuffer: submesh.indexBuffer.buffer, indexBufferOffset:submesh.indexBuffer.offset)
             
+            renderEncoder.drawIndexedPrimitives(type: .triangle, indexCount: submesh.indexCount, indexType: submesh.indexType, indexBuffer: submesh.indexBuffer.buffer, indexBufferOffset:submesh.indexBuffer.offset,
+                instanceCount:1000)
+            
+        
             
             renderEncoder.popDebugGroup()
             renderEncoder.endEncoding()
