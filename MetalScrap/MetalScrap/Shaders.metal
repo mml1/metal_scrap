@@ -56,8 +56,8 @@ fragment half4 passThroughFragment(FragmentParameters inFrag [[stage_in]],
     
     float3 normal = normalize(inFrag.normal.xyz);
     float  diffuse = saturate(dot(-lightDir, normal)); // diffused intensity
-    float  halfVector = (dot(-lightDir,inFrag.position.xyz));
-    float  specularFactor = 0.001;
+    float  halfVector = (dot(lightDir,inFrag.position.xyz));
+    float  specularFactor = 0.025;
     float  specular = pow((dot(normal, halfVector)),specularFactor);
     
     
