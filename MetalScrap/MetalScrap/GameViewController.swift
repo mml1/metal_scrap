@@ -178,6 +178,9 @@ class GameViewController: NSViewController, MTKViewDelegate {
             
             
             renderEncoder.setVertexBuffer(mtkMesh.vertexBuffers.first!.buffer, offset: mtkMesh.vertexBuffers.first!.offset, at: 0)
+            
+            renderEncoder.setVertexBuffer(instanceBuffer, offset: 0, at: 1)
+            
             //passing to shader, passing by address is the &
             renderEncoder.setVertexBytes(&modelProjectMatrix, length: MemoryLayout<float4x4>.size, at: 3)
             
