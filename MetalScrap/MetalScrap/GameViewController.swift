@@ -61,8 +61,9 @@ class GameViewController: NSViewController, MTKViewDelegate {
     let instanceCount = 1000
     var cowRotations:[Float] = []
     var cowTranslations:[float3] = []
-    let maximumInflightFrames = 3;
+    let maximumInflightFrames = 3
     var currentFrameIndex = 0
+    var frameSemaphore: DispatchSemaphore! = nil
     
     
     override func viewDidLoad() {
@@ -161,6 +162,10 @@ class GameViewController: NSViewController, MTKViewDelegate {
         blitEncoder.endEncoding()
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
+        
+        
+        // GPU Stop
+        frameSemaphore = DispatchSemaphore(value: maximumInflightFrames)
     }
     
     func update(timestep: Float){
@@ -176,7 +181,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
        
     }
     func draw(in view: MTKView) {
-        
+        frameSemaphore.wait()
         let commandBuffer = commandQueue.makeCommandBuffer()
         commandBuffer.label = "Frame command buffer"
         
@@ -207,7 +212,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
             
             renderEncoder.setVertexBuffer(mtkMesh.vertexBuffers.first!.buffer, offset: mtkMesh.vertexBuffers.first!.offset, at: 0)
             
-            renderEncoder.setVertexBuffer(instanceBuffer, offset: 0, at: 1)
+            renderEncoder.setVertexBuffer(instanceBuffers[currentFrameIndex], offset: 0, at: 1)
             
             //passing to shader, passing by address is the &
             renderEncoder.setVertexBytes(&viewProjectionMatrix, length: MemoryLayout<float4x4>.size, at: 3)
@@ -232,7 +237,10 @@ class GameViewController: NSViewController, MTKViewDelegate {
             
             commandBuffer.present(currentDrawable)
         }
-        
+        currentFrameIndex += 1;
+        commandBuffer.addCompletedHandler { commandBuffer in
+            self.frameSemaphore.signal()
+        }
         commandBuffer.commit()
     }
     
