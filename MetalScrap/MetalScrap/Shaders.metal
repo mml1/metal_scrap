@@ -41,7 +41,7 @@ vertex FragmentParameters passThroughVertex(uint vid [[ vertex_id ]],
     
     FragmentParameters out;
     //passing into fragment buffer
-    out.position = modelMatrix * float4(float3(vert.position)+offset,1); // adds the w
+    out.position = modelMatrix * float4(float3(vert.position)+offset,1); // adds the w to position in
     out.normal    = float4(float3(vert.normal),0);
     out.texCoords = vert.texCoords;
     
@@ -52,15 +52,17 @@ fragment half4 passThroughFragment(FragmentParameters inFrag [[stage_in]],
                                    texture2d<float, access::sample> tex2d [[texture(0)]])
 {
     float3 lightDir = normalize(float3(1,-1,-1)); // from right and above light
-    float ambient = 0.2;
+    float  ambient = 0.2;
     
     float3 normal = normalize(inFrag.normal.xyz);
-    float diffuse = saturate(dot(-lightDir, normal)); // diffused intensity
+    float  diffuse = saturate(dot(-lightDir, normal)); // diffused intensity
+    float  halfVector = (dot(-lightDir,inFrag.position.xyz));
+    float  specularFactor = 0.001;
+    float  specular = pow((dot(normal, halfVector)),specularFactor);
     
     
     constexpr sampler sampler2d(coord::normalized, filter::linear, mip_filter::linear, address::repeat);
-//    return half4( (ambient + diffuse)* tex2d.sample(sampler2d, inFrag.texCoords));
-    return half4( (ambient + diffuse) * half4(1,0,0,1));
 
+    return half4((ambient + diffuse + specular) * tex2d.sample(sampler2d, inFrag.texCoords));
 
 };
