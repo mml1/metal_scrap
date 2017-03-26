@@ -55,10 +55,10 @@ class GameViewController: NSViewController, MTKViewDelegate {
     var pipelineState: MTLRenderPipelineState! = nil
     var vertexPositionBuffer: MTLBuffer! = nil
     var vertexColorBuffer: MTLBuffer! = nil
-    
+    var instanceBuffer: MTLBuffer! = nil
     var mtkMesh: MTKMesh! = nil
     var depthStencilState: MTLDepthStencilState! = nil
-    
+    let instanceCount = 1000
     
     override func viewDidLoad() {
         
@@ -117,10 +117,22 @@ class GameViewController: NSViewController, MTKViewDelegate {
         vertexDescriptor.layouts[0] = MDLVertexBufferLayout(stride: 32)
         
         let assetURL = Bundle.main.url(forResource: "spot", withExtension: "obj")!
+        // using model io =>mdlAsset
         let mdlAsset = MDLAsset(url: assetURL, vertexDescriptor: vertexDescriptor, bufferAllocator: allocator)
         let mdlMesh = mdlAsset[0] as! MDLMesh
         
         mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
+        
+        //MemoryLayout => for matrix
+        instanceBuffer = device.makeBuffer(length: MemoryLayout.stride(ofValue: float4x4.self) * instanceCount, options: [])
+        let contents = instanceBuffer.contents().bindMemory(to: float4x4.self, capacity: instanceCount)
+        for i in 0..<instanceCount {
+            let modelMatrix = translation(tx: Float(drand48()*7-3.5),ty: Float(drand48()*7-3.5), tz: Float(drand48()*7-3.5));
+            
+            
+        }
+        
+        // end of data assests
         
         // depth buffering
         let depthDescriptor = MTLDepthStencilDescriptor()
@@ -181,7 +193,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
             let submesh =  mtkMesh.submeshes.first!
             
             renderEncoder.drawIndexedPrimitives(type: .triangle, indexCount: submesh.indexCount, indexType: submesh.indexType, indexBuffer: submesh.indexBuffer.buffer, indexBufferOffset:submesh.indexBuffer.offset,
-                instanceCount:1000)
+                instanceCount:instanceCount)
             
         
             

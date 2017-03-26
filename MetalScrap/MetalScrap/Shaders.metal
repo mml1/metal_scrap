@@ -59,7 +59,7 @@ fragment half4 passThroughFragment(FragmentParameters inFrag [[stage_in]],
     
     float3 cameraDir = normalize(float3(0,0,0) - inFrag.position.xyz);
     
-    float3 halfVector = normalize(lightDir+cameraDir);
+    float3 halfVector = normalize(lightDir+ cameraDir);
     float  specularFactor = 10;
     float  specular = pow((dot(normal, halfVector)),specularFactor);
     
