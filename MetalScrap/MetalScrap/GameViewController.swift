@@ -124,12 +124,11 @@ class GameViewController: NSViewController, MTKViewDelegate {
         mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
         
         //MemoryLayout => for matrix
-        instanceBuffer = device.makeBuffer(length: MemoryLayout.stride(ofValue: float4x4.self) * instanceCount, options: [])
+        instanceBuffer = device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: [])
         let contents = instanceBuffer.contents().bindMemory(to: float4x4.self, capacity: instanceCount)
         for i in 0..<instanceCount {
             let modelMatrix = translation(tx: Float(drand48()*7-3.5),ty: Float(drand48()*7-3.5), tz: Float(drand48()*7-3.5));
-            
-            
+            contents[i] = modelMatrix;
         }
         
         // end of data assests
