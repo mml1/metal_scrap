@@ -55,10 +55,15 @@ class GameViewController: NSViewController, MTKViewDelegate {
     var pipelineState: MTLRenderPipelineState! = nil
     var vertexPositionBuffer: MTLBuffer! = nil
     var vertexColorBuffer: MTLBuffer! = nil
-    var instanceBuffer: MTLBuffer! = nil
+    var instanceBuffers: [MTLBuffer] = []
     var mtkMesh: MTKMesh! = nil
     var depthStencilState: MTLDepthStencilState! = nil
     let instanceCount = 1000
+    var cowRotations:[Float] = []
+    var cowTranslations:[float3] = []
+    let maximumInflightFrames = 3;
+    var currentFrameIndex = 0
+    
     
     override func viewDidLoad() {
         
@@ -124,12 +129,23 @@ class GameViewController: NSViewController, MTKViewDelegate {
         mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
         
         //MemoryLayout => for matrix
-        instanceBuffer = device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: [])
-        let contents = instanceBuffer.contents().bindMemory(to: float4x4.self, capacity: instanceCount)
-        for i in 0..<instanceCount {
-            let modelMatrix = translation(tx: Float(drand48()*7-3.5),ty: Float(drand48()*7-3.5), tz: Float(drand48()*7-3.5));
-            contents[i] = modelMatrix;
+        
+        
+        cowRotations = [Float](repeatElement(0, count: instanceCount))
+        cowTranslations = [float3](repeatElement(float3(), count: instanceCount)) // creates default float 3 (0,0,0)
+//        instanceBuffers = device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: [])
+        
+        for i in 0..<maximumInflightFrames {
+            instanceBuffers[i] = device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: []);
         }
+        
+        for i in 0..<instanceCount {
+
+            cowRotations[i] = Float(drand48() * Double.pi * 2 );
+            cowTranslations[i] = float3(Float(drand48()*7-3.5), Float(drand48()*7-3.5), Float(drand48()*7-3.5))
+            
+        }
+        
         
         // end of data assests
         
@@ -147,6 +163,18 @@ class GameViewController: NSViewController, MTKViewDelegate {
         commandBuffer.waitUntilCompleted()
     }
     
+    func update(timestep: Float){
+        let contents = instanceBuffers[currentFrameIndex].contents().bindMemory(to: float4x4.self, capacity: instanceCount)
+        
+        for i in 0..<instanceCount {
+            let position = cowTranslations[i]
+            let modelMatrix = translation(tx: position.x,ty: position.y, tz: position.z) * rotationY(rad: cowRotations[i])
+            cowRotations[i] += 3 * timestep; // 3radians per second
+            contents[i] = modelMatrix;
+
+        }
+       
+    }
     func draw(in view: MTKView) {
         
         let commandBuffer = commandQueue.makeCommandBuffer()
