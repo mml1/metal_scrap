@@ -59,6 +59,8 @@ fragment half4 passThroughFragment(FragmentParameters inFrag [[stage_in]],
     
     
     constexpr sampler sampler2d(coord::normalized, filter::linear, mip_filter::linear, address::repeat);
-    return half4( (ambient + diffuse)* tex2d.sample(sampler2d, inFrag.texCoords));
+//    return half4( (ambient + diffuse)* tex2d.sample(sampler2d, inFrag.texCoords));
+    return half4( (ambient + diffuse) * half4(1,0,0,1));
+
 
 };
