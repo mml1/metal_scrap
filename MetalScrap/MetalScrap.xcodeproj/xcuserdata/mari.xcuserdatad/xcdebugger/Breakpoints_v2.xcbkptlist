@@ -6,7 +6,7 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "MetalScrap/GameViewController.swift"
@@ -16,38 +16,6 @@
             startingLineNumber = "7"
             endingLineNumber = "7"
             landmarkName = "rotationZ(rad:)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MetalScrap/Shaders.metal"
-            timestampString = "509173305.465222"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "35"
-            endingLineNumber = "35"
-            landmarkName = "passThroughVertex(uint vid [[ vertex_id ]], uint inst [[instance_id]], constant InputVertex* vertices [[ buffer(0) ]], constant float4x4 &amp;modelMatrix [[buffer(3)]])"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MetalScrap/Shaders.metal"
-            timestampString = "509173650.890816"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "36"
-            endingLineNumber = "36"
-            landmarkName = "passThroughVertex(uint vid [[ vertex_id ]], uint inst [[instance_id]], constant InputVertex* vertices [[ buffer(0) ]], constant float4x4 &amp;modelMatrix [[buffer(3)]])"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
