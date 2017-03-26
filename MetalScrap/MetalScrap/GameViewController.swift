@@ -171,7 +171,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
             let projection = projectionMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:1000);
             
             //if I don't have the translate it will orbit around me lol
-            var modelProjectMatrix = projection * inverseTranslate * rotationMatrix * translate
+            var viewProjectionMatrix = projection * inverseTranslate * rotationMatrix * translate
             
             renderEncoder.pushDebugGroup("draw morphing triangle")
             renderEncoder.setRenderPipelineState(pipelineState)
@@ -182,7 +182,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.setVertexBuffer(instanceBuffer, offset: 0, at: 1)
             
             //passing to shader, passing by address is the &
-            renderEncoder.setVertexBytes(&modelProjectMatrix, length: MemoryLayout<float4x4>.size, at: 3)
+            renderEncoder.setVertexBytes(&viewProjectionMatrix, length: MemoryLayout<float4x4>.size, at: 3)
             
             
             // step 3 adding to texture bucket (argument table)

@@ -27,21 +27,16 @@ struct InputVertex
 
 
 vertex FragmentParameters passThroughVertex(uint vid [[ vertex_id ]],
-                                            uint inst [[instance_id]],
+                                            uint instance [[instance_id]],
                                             constant InputVertex* vertices  [[ buffer(0) ]],
-                                            constant float4x4 &modelMatrix [[buffer(3)]])
+                                            constant float4x4 * instanceModelMatrices [[ buffer(1)]], // * is pointer
+                                            constant float4x4 &viewProjectionMatrix [[buffer(3)]]) // & needs to be here because passing by ref
 {
     InputVertex vert = vertices[vid]; // fetching all of the vertex properties with this call
-    uint xInst = (inst/100)% 10;
-    uint yInst = (inst/10) % 10;
-    uint zInst = (inst/1)  % 10;
-
-    float3 offset = float3(0.7*xInst,0.7*yInst,0.7*zInst);
-
     
     FragmentParameters out;
     //passing into fragment buffer
-    out.position = modelMatrix * float4(float3(vert.position)+offset,1); // adds the w to position in
+    out.position = viewProjectionMatrix * instanceModelMatrices[instance] * float4(float3(vert.position),1); // adds the w to position in
     out.normal    = float4(float3(vert.normal),0);
     out.texCoords = vert.texCoords;
     
