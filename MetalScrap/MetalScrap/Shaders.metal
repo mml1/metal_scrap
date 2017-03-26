@@ -35,8 +35,8 @@ vertex FragmentParameters passThroughVertex(uint vid [[ vertex_id ]],
     uint xInst = (inst/100)% 10;
     uint yInst = (inst/10) % 10;
     uint zInst = (inst/1)  % 10;
-    //    float3 offset = (10,0,0) * inst; no useful error
-        float3 offset = float3(0.7*xInst,0.7*yInst,0.7*zInst);
+
+    float3 offset = float3(0.7*xInst,0.7*yInst,0.7*zInst);
 
     
     FragmentParameters out;
