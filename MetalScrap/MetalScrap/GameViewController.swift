@@ -58,7 +58,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
     var instanceBuffers: [MTLBuffer] = []
     var mtkMesh: MTKMesh! = nil
     var depthStencilState: MTLDepthStencilState! = nil
-    let instanceCount = 1000
+    let instanceCount = 500
     var cowRotations:[Float] = []
     var cowTranslations:[float3] = []
     let maximumInflightFrames = 3
@@ -136,9 +136,11 @@ class GameViewController: NSViewController, MTKViewDelegate {
         cowTranslations = [float3](repeatElement(float3(), count: instanceCount)) // creates default float 3 (0,0,0)
 //        instanceBuffers = device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: [])
         
-        for i in 0..<maximumInflightFrames {
-            instanceBuffers[i] = device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: []);
+        var buffers = [MTLBuffer]()
+        for _ in 0..<maximumInflightFrames {
+            buffers.append(device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: []))
         }
+        instanceBuffers = buffers
         
         for i in 0..<instanceCount {
 
@@ -181,6 +183,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
        
     }
     func draw(in view: MTKView) {
+        update(timestep: (1/Float(view.preferredFramesPerSecond)))
         frameSemaphore.wait()
         let commandBuffer = commandQueue.makeCommandBuffer()
         commandBuffer.label = "Frame command buffer"
@@ -198,13 +201,13 @@ class GameViewController: NSViewController, MTKViewDelegate {
             let rotationMatrix = rotationY(rad: 290 *  time * degreesToRadians)
             
             let translate = translation(tx:0, ty:0,tz:-0.5)
-            let inverseTranslate = translation(tx:0, ty:0, tz:0.9 * time)
+            let inverseTranslate = translation(tx:0, ty:0, tz:9)
             
             //projection matrix
             let projection = projectionMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:1000);
             
             //if I don't have the translate it will orbit around me lol
-            var viewProjectionMatrix = projection * inverseTranslate * rotationMatrix * translate
+            var viewProjectionMatrix = projection * inverseTranslate// * rotationMatrix * translate
             
             renderEncoder.pushDebugGroup("draw morphing triangle")
             renderEncoder.setRenderPipelineState(pipelineState)
@@ -237,7 +240,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
             
             commandBuffer.present(currentDrawable)
         }
-        currentFrameIndex += 1;
+        currentFrameIndex = (currentFrameIndex+1) % maximumInflightFrames
         commandBuffer.addCompletedHandler { commandBuffer in
             self.frameSemaphore.signal()
         }

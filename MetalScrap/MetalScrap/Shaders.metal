@@ -28,7 +28,7 @@ struct InputVertex
 
 vertex FragmentParameters passThroughVertex(uint vid [[ vertex_id ]],
                                             uint instance [[instance_id]],
-                                            constant InputVertex* vertices  [[ buffer(0) ]],
+                                            device InputVertex* vertices  [[ buffer(0) ]],
                                             constant float4x4 * instanceModelMatrices [[ buffer(1)]], // * is pointer
                                             constant float4x4 &viewProjectionMatrix [[buffer(3)]]) // & needs to be here because passing by ref
 {
