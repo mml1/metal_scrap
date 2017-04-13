@@ -63,7 +63,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
     var mtkMesh: MTKMesh! = nil
     
     // specific object variables
-    let instanceCount = 5
+    let instanceCount = 1
     var cowRotations:[Float] = []
     var cowTranslations:[float3] = []
     
@@ -112,7 +112,8 @@ class GameViewController: NSViewController, MTKViewDelegate {
         pipelineStateDescriptor.vertexFunction = vertexProgram
         pipelineStateDescriptor.fragmentFunction = fragmentProgram
         pipelineStateDescriptor.colorAttachments[0].pixelFormat = view.colorPixelFormat
-        pipelineStateDescriptor.depthAttachmentPixelFormat = view.depthStencilPixelFormat;        pipelineStateDescriptor.stencilAttachmentPixelFormat = view.depthStencilPixelFormat
+        pipelineStateDescriptor.depthAttachmentPixelFormat = view.depthStencilPixelFormat;
+        pipelineStateDescriptor.stencilAttachmentPixelFormat = view.depthStencilPixelFormat
         pipelineStateDescriptor.sampleCount = view.sampleCount
         
         do {
@@ -133,23 +134,25 @@ class GameViewController: NSViewController, MTKViewDelegate {
         let assetURL = Bundle.main.url(forResource: "spot", withExtension: "obj")!
         let mdlAsset = MDLAsset(url: assetURL, vertexDescriptor: vertexDescriptor, bufferAllocator: allocator)
         let mdlMesh = mdlAsset[0] as! MDLMesh
-        
         mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
+        
         
         cowRotations = [Float](repeatElement(0, count: instanceCount))
         cowTranslations = [float3](repeatElement(float3(), count: instanceCount))
         
+        // Buffers needed to avoid tearing
         var buffers = [MTLBuffer]()
         for _ in 0..<maximumInflightFrames {
             buffers.append(device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: []))
         }
+        
         instanceBuffers = buffers
         
-        for i in 0..<instanceCount {
+//        for i in 0..<instanceCount {
 
-            cowRotations[i] = Float(drand48() * Double.pi * 2 );
-            cowTranslations[i] = float3(Float(drand48()*7-3.5), Float(drand48()*7-3.5), Float(drand48()*7-3.5))
-        }
+            cowRotations[0] = Float(drand48() * Double.pi * 2 );
+            cowTranslations[0] = float3(Float(drand48()*7-3.5), Float(drand48()*7-3.5), Float(drand48()*7-3.5))
+//        }
         
         
         // depth buffering
@@ -176,13 +179,15 @@ class GameViewController: NSViewController, MTKViewDelegate {
     func update(timestep: Float){
         let contents = instanceBuffers[currentFrameIndex].contents().bindMemory(to: float4x4.self, capacity: instanceCount)
         
-        for i in 0..<instanceCount {
-            let position = cowTranslations[i]
-            let modelMatrix = translation(tx: position.x,ty: position.y, tz: position.z) * rotationY(rad: cowRotations[i])
-            cowRotations[i] += 3 * timestep; // 3radians per second
-            contents[i] = modelMatrix;
+//        for i in 0..<instanceCount {
+            let position = cowTranslations[0]
+            let modelMatrix = translation(tx: position.x,ty: position.y, tz: position.z)
 
-        }
+//            let modelMatrix = translation(tx: position.x,ty: position.y, tz: position.z) * rotationY(rad: cowRotations[0])
+            cowRotations[0] += 3 * timestep; // 3radians per second
+            contents[0] = modelMatrix;
+
+//        }
        
     }
     
@@ -204,8 +209,8 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.label = "render encoder"
             
             
-            let inverseTranslate = translation(tx:0, ty:0, tz:9)
-            let projection = projectionMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:1000);
+            let inverseTranslate = translation(tx:0, ty:0, tz:5)
+            let projection = projectionMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:100);
             var viewProjectionMatrix = projection * inverseTranslate
             
             renderEncoder.pushDebugGroup("draw morphing cows")

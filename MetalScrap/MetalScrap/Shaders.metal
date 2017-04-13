@@ -35,6 +35,7 @@ vertex FragmentParameters passThroughVertex(uint vid [[ vertex_id ]],
     InputVertex vert = vertices[vid];
     
     FragmentParameters out;
+    
     out.position = viewProjectionMatrix * instanceModelMatrices[instance] * float4(float3(vert.position),1);
     out.normal    = float4(float3(vert.normal),0);
     out.texCoords = vert.texCoords;
@@ -45,18 +46,17 @@ vertex FragmentParameters passThroughVertex(uint vid [[ vertex_id ]],
 fragment half4 passThroughFragment(FragmentParameters inFrag [[stage_in]],
                                    texture2d<float, access::sample> tex2d [[texture(0)]])
 {
+    // direction of camera
+    float3 cameraDir = normalize(float3(0,0,0) - inFrag.position.xyz);
+
+    // lightening information
     float3 lightDir = normalize(float3(1,-1,-1));
     float  ambient = 0.2;
-    
     float3 normal = normalize(inFrag.normal.xyz);
     float  diffuse = saturate(dot(-lightDir, normal));
-    
-    float3 cameraDir = normalize(float3(0,0,0) - inFrag.position.xyz);
-    
     float3 halfVector = normalize(lightDir+ cameraDir);
     float  specularFactor = 10;
     float  specular = pow((dot(normal, halfVector)),specularFactor);
-    
     
     constexpr sampler sampler2d(coord::normalized, filter::linear, mip_filter::linear, address::repeat);
 
