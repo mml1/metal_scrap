@@ -3,7 +3,11 @@ import Cocoa
 import MetalKit
 import simd
 
-// rotation z
+
+///////////////////////////////////////////////////
+/////////////        Matrices     ////////////////
+/////////////////////////////////////////////////
+
 func rotationZ(rad: Float) -> float4x4 {
     return float4x4([
         float4( cos(rad), sin(rad), 0, 0),
@@ -12,7 +16,6 @@ func rotationZ(rad: Float) -> float4x4 {
         float4(        0,        0, 0, 1)])
 }
 
-// rotation y
 func rotationY(rad: Float) -> float4x4 {
     return float4x4([
         float4( cos(rad), 0, -sin(rad), 0),
@@ -21,7 +24,6 @@ func rotationY(rad: Float) -> float4x4 {
         float4(        0,        0, 0,  1)])
 }
 
-// translation function
 func translation(tx: Float, ty: Float, tz: Float) -> float4x4{
     return float4x4([
         float4(1,0,0,0),
@@ -30,12 +32,10 @@ func translation(tx: Float, ty: Float, tz: Float) -> float4x4{
         float4(tx,ty,tz,1)
         ])
 }
-// projection matrix
 func projectionMatrix(rad: Float, ar: Float, nearZ:Float, farZ: Float) -> float4x4 {
     let tanHalfFOV = tan(rad/2)
     let zRange = nearZ - farZ
     
-    //col major so program expects the columns
     return float4x4([
         float4((1/tanHalfFOV),0,0,0),
         float4(0,(1/tanHalfFOV*ar),0,0),
@@ -46,21 +46,28 @@ func projectionMatrix(rad: Float, ar: Float, nearZ:Float, farZ: Float) -> float4
 
 class GameViewController: NSViewController, MTKViewDelegate {
     
-    //member variables
+    // needed for overall rendering
     var device: MTLDevice! = nil
-    var startTime: TimeInterval = 0
-    var texture: MTLTexture! = nil // first make a texture member variable
-    var textureCoordinateBuffer: MTLBuffer! = nil // fourth  make texture buffer
     var commandQueue: MTLCommandQueue! = nil
     var pipelineState: MTLRenderPipelineState! = nil
+    var depthStencilState: MTLDepthStencilState! = nil
+    
+    // buffers
     var vertexPositionBuffer: MTLBuffer! = nil
     var vertexColorBuffer: MTLBuffer! = nil
     var instanceBuffers: [MTLBuffer] = []
+    var textureCoordinateBuffer: MTLBuffer! = nil
+    
+    // textures and meshes
+    var texture: MTLTexture! = nil
     var mtkMesh: MTKMesh! = nil
-    var depthStencilState: MTLDepthStencilState! = nil
-    let instanceCount = 500
+    
+    // specific object variables
+    let instanceCount = 5
     var cowRotations:[Float] = []
     var cowTranslations:[float3] = []
+    
+    // used for frames
     let maximumInflightFrames = 3
     var currentFrameIndex = 0
     var frameSemaphore: DispatchSemaphore! = nil
@@ -81,13 +88,17 @@ class GameViewController: NSViewController, MTKViewDelegate {
         loadAssets()
     }
     
+    ///////////////////////////////////////////////////
+    /////////////        Assets       ////////////////
+    /////////////////////////////////////////////////
+
+    
     func loadAssets() {
         
-        // load any resources required for rendering
         let view = self.view as! MTKView
         commandQueue = device.makeCommandQueue()
         commandQueue.label = "main command queue"
-        let textureLoader = MTKTextureLoader(device:device) // second, load loader
+        let textureLoader = MTKTextureLoader(device:device)
         let URL = Bundle.main.url(forResource: "spot_texture", withExtension: "png")
         let options = [MTKTextureLoaderOptionOrigin : MTKTextureLoaderOriginBottomLeft as NSObject,
                        MTKTextureLoaderOptionAllocateMipmaps : true as NSObject]
@@ -101,8 +112,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
         pipelineStateDescriptor.vertexFunction = vertexProgram
         pipelineStateDescriptor.fragmentFunction = fragmentProgram
         pipelineStateDescriptor.colorAttachments[0].pixelFormat = view.colorPixelFormat
-        pipelineStateDescriptor.depthAttachmentPixelFormat = view.depthStencilPixelFormat // expect to write to a depth map
-        pipelineStateDescriptor.stencilAttachmentPixelFormat = view.depthStencilPixelFormat // not using it yet but needed for build, helps restrict geometry in other geometry
+        pipelineStateDescriptor.depthAttachmentPixelFormat = view.depthStencilPixelFormat;        pipelineStateDescriptor.stencilAttachmentPixelFormat = view.depthStencilPixelFormat
         pipelineStateDescriptor.sampleCount = view.sampleCount
         
         do {
@@ -111,8 +121,6 @@ class GameViewController: NSViewController, MTKViewDelegate {
             print("Failed to create pipeline state, error \(error)")
         }
         
-        
-        startTime = CACurrentMediaTime()
         
         let allocator = MTKMeshBufferAllocator(device: device)
         
@@ -123,18 +131,13 @@ class GameViewController: NSViewController, MTKViewDelegate {
         vertexDescriptor.layouts[0] = MDLVertexBufferLayout(stride: 32)
         
         let assetURL = Bundle.main.url(forResource: "spot", withExtension: "obj")!
-        // using model io =>mdlAsset
         let mdlAsset = MDLAsset(url: assetURL, vertexDescriptor: vertexDescriptor, bufferAllocator: allocator)
         let mdlMesh = mdlAsset[0] as! MDLMesh
         
         mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
         
-        //MemoryLayout => for matrix
-        
-        
         cowRotations = [Float](repeatElement(0, count: instanceCount))
-        cowTranslations = [float3](repeatElement(float3(), count: instanceCount)) // creates default float 3 (0,0,0)
-//        instanceBuffers = device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: [])
+        cowTranslations = [float3](repeatElement(float3(), count: instanceCount))
         
         var buffers = [MTLBuffer]()
         for _ in 0..<maximumInflightFrames {
@@ -146,16 +149,13 @@ class GameViewController: NSViewController, MTKViewDelegate {
 
             cowRotations[i] = Float(drand48() * Double.pi * 2 );
             cowTranslations[i] = float3(Float(drand48()*7-3.5), Float(drand48()*7-3.5), Float(drand48()*7-3.5))
-            
         }
         
         
-        // end of data assests
-        
         // depth buffering
         let depthDescriptor = MTLDepthStencilDescriptor()
-        depthDescriptor.isDepthWriteEnabled = true // will not want for particle drawing, since drawing everything opaque
-        depthDescriptor.depthCompareFunction = .less // if it is closer to the camera overwrite
+        depthDescriptor.isDepthWriteEnabled = true
+        depthDescriptor.depthCompareFunction = .less
         depthStencilState = device.makeDepthStencilState(descriptor: depthDescriptor)
         
         let commandBuffer = commandQueue.makeCommandBuffer()
@@ -170,6 +170,9 @@ class GameViewController: NSViewController, MTKViewDelegate {
         frameSemaphore = DispatchSemaphore(value: maximumInflightFrames)
     }
     
+    ///////////////////////////////////////////////////
+    /////////////      Location       ////////////////
+    /////////////////////////////////////////////////
     func update(timestep: Float){
         let contents = instanceBuffers[currentFrameIndex].contents().bindMemory(to: float4x4.self, capacity: instanceCount)
         
@@ -182,9 +185,16 @@ class GameViewController: NSViewController, MTKViewDelegate {
         }
        
     }
+    
+    ///////////////////////////////////////////////////
+    /////////////       Drawing       ////////////////
+    /////////////////////////////////////////////////
+
     func draw(in view: MTKView) {
+        
         update(timestep: (1/Float(view.preferredFramesPerSecond)))
         frameSemaphore.wait()
+        
         let commandBuffer = commandQueue.makeCommandBuffer()
         commandBuffer.label = "Frame command buffer"
         
@@ -194,37 +204,19 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.label = "render encoder"
             
             
-//            let time = Float(CACurrentMediaTime()-startTime)
-            
-//            let degreesToRadians = Float(.pi / 180.0)
-            
-//            let rotationMatrix = rotationY(rad: 290 *  time * degreesToRadians)
-            
-//            let translate = translation(tx:0, ty:0,tz:-0.5)
             let inverseTranslate = translation(tx:0, ty:0, tz:9)
-            
-            //projection matrix
             let projection = projectionMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:1000);
+            var viewProjectionMatrix = projection * inverseTranslate
             
-            //if I don't have the translate it will orbit around me lol
-            var viewProjectionMatrix = projection * inverseTranslate// * rotationMatrix * translate
-            
-            renderEncoder.pushDebugGroup("draw morphing triangle")
+            renderEncoder.pushDebugGroup("draw morphing cows")
             renderEncoder.setRenderPipelineState(pipelineState)
             
             
             renderEncoder.setVertexBuffer(mtkMesh.vertexBuffers.first!.buffer, offset: mtkMesh.vertexBuffers.first!.offset, at: 0)
-            
             renderEncoder.setVertexBuffer(instanceBuffers[currentFrameIndex], offset: 0, at: 1)
-            
-            //passing to shader, passing by address is the &
             renderEncoder.setVertexBytes(&viewProjectionMatrix, length: MemoryLayout<float4x4>.size, at: 3)
-            
-            
-            // step 3 adding to texture bucket (argument table)
             renderEncoder.setFragmentTexture(texture, at: 0)
             
-            //
             renderEncoder.setDepthStencilState(depthStencilState)
             
             
@@ -233,13 +225,12 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.drawIndexedPrimitives(type: .triangle, indexCount: submesh.indexCount, indexType: submesh.indexType, indexBuffer: submesh.indexBuffer.buffer, indexBufferOffset:submesh.indexBuffer.offset,
                 instanceCount:instanceCount)
             
-        
-            
             renderEncoder.popDebugGroup()
             renderEncoder.endEncoding()
             
             commandBuffer.present(currentDrawable)
         }
+        
         currentFrameIndex = (currentFrameIndex+1) % maximumInflightFrames
         commandBuffer.addCompletedHandler { commandBuffer in
             self.frameSemaphore.signal()
