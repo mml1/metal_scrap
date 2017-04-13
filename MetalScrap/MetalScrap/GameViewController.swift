@@ -194,13 +194,13 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.label = "render encoder"
             
             
-            let time = Float(CACurrentMediaTime()-startTime)
+//            let time = Float(CACurrentMediaTime()-startTime)
             
-            let degreesToRadians = Float(M_PI / 180.0)
+//            let degreesToRadians = Float(.pi / 180.0)
             
-            let rotationMatrix = rotationY(rad: 290 *  time * degreesToRadians)
+//            let rotationMatrix = rotationY(rad: 290 *  time * degreesToRadians)
             
-            let translate = translation(tx:0, ty:0,tz:-0.5)
+//            let translate = translation(tx:0, ty:0,tz:-0.5)
             let inverseTranslate = translation(tx:0, ty:0, tz:9)
             
             //projection matrix
