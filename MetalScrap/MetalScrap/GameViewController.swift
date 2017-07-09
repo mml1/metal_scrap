@@ -5,6 +5,35 @@ import simd
 
 
 ///////////////////////////////////////////////////
+/////////////      Helper Class     //////////////
+/////////////////////////////////////////////////
+
+struct Sphere {
+
+    public var center:float3 = float3(0,0,0)
+    public var radius:Float = 0
+    
+    public init(_center: float3, _radius: Float) {
+        center = _center
+        radius = _radius
+    }
+    public init() {}
+    
+}
+
+struct Ray {
+    public var point:float3 = float3(0,0,0)
+    public var direction:float3 = float3(0,0,0)
+    
+    public init(_point: float3, _direction: float3) {
+        point = _point
+        direction = _direction
+    }
+    public init(){}
+}
+
+
+///////////////////////////////////////////////////
 /////////////        Matrices     ////////////////
 /////////////////////////////////////////////////
 
@@ -32,6 +61,17 @@ func translation(tx: Float, ty: Float, tz: Float) -> float4x4{
         float4(tx,ty,tz,1)
         ])
 }
+
+func testPrint(tx: Float, ty: Float, tz: Float) {
+    let complete = float4x4([
+        float4(1,0,0,0),
+        float4(0,1,0,0),
+        float4(0,0,1,0),
+        float4(tx,ty,tz,1)
+        ])
+    print(complete, "seeing what is in the matrix");
+//    return complete;
+}
 func projectionMatrix(rad: Float, ar: Float, nearZ:Float, farZ: Float) -> float4x4 {
     let tanHalfFOV = tan(rad/2)
     let zRange = nearZ - farZ
@@ -45,6 +85,7 @@ func projectionMatrix(rad: Float, ar: Float, nearZ:Float, farZ: Float) -> float4
 }
 
 class GameViewController: NSViewController, MTKViewDelegate {
+
     
     // needed for overall rendering
     var device: MTLDevice! = nil
@@ -67,11 +108,22 @@ class GameViewController: NSViewController, MTKViewDelegate {
     var cowRotations:[Float] = []
     var cowTranslations:[float3] = []
     
+    var cowBoundingSphere:Sphere = Sphere()
+    var rayForIntersection:Ray = Ray()
+    
     // used for frames
     let maximumInflightFrames = 3
     var currentFrameIndex = 0
     var frameSemaphore: DispatchSemaphore! = nil
     
+    // Getting coordinates of user mouseDown event in Window
+    override func mouseDown(with theEvent : NSEvent) {
+        super.mouseDown(with: theEvent)
+        print("left mouse")
+        let mousePosInWindow:NSPoint = theEvent.locationInWindow
+        print(mousePosInWindow)
+        
+    }
     
     override func viewDidLoad() {
         
@@ -133,9 +185,25 @@ class GameViewController: NSViewController, MTKViewDelegate {
         
         let assetURL = Bundle.main.url(forResource: "spot", withExtension: "obj")!
         let mdlAsset = MDLAsset(url: assetURL, vertexDescriptor: vertexDescriptor, bufferAllocator: allocator)
-        let mdlMesh = mdlAsset[0] as! MDLMesh
-        mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
         
+        
+        let mdlMesh = mdlAsset[0] as! MDLMesh
+        
+        ////////////////////////////////////////////////////////
+        // Creating Bounding Box in order to click on cow :D //
+        //////////////////////////////////////////////////////
+        
+        let cowMeshBox = mdlMesh.boundingBox
+
+        // creating sphere around bounding box
+        cowBoundingSphere.center = (cowMeshBox.maxBounds + cowMeshBox.minBounds) * 0.5
+        let delta = cowBoundingSphere.center - cowMeshBox.minBounds
+        cowBoundingSphere.radius = length(delta)
+        
+        
+        
+        mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
+
         
         cowRotations = [Float](repeatElement(0, count: instanceCount))
         cowTranslations = [float3](repeatElement(float3(), count: instanceCount))
@@ -182,10 +250,12 @@ class GameViewController: NSViewController, MTKViewDelegate {
 //        for i in 0..<instanceCount {
             let position = cowTranslations[0]
             let modelMatrix = translation(tx: position.x,ty: position.y, tz: position.z)
-
+        
+//        testPrint(tx: position.x,ty: position.y, tz: position.z);
 //            let modelMatrix = translation(tx: position.x,ty: position.y, tz: position.z) * rotationY(rad: cowRotations[0])
             cowRotations[0] += 3 * timestep; // 3radians per second
             contents[0] = modelMatrix;
+//            print(contents[1], "CHecking what is in the matrix")
 
 //        }
        
@@ -196,8 +266,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
     /////////////////////////////////////////////////
 
     func draw(in view: MTKView) {
-        
-        update(timestep: (1/Float(view.preferredFramesPerSecond)))
+      update(timestep: (1/Float(view.preferredFramesPerSecond)))
         frameSemaphore.wait()
         
         let commandBuffer = commandQueue.makeCommandBuffer()
@@ -211,7 +280,19 @@ class GameViewController: NSViewController, MTKViewDelegate {
             
             let inverseTranslate = translation(tx:0, ty:0, tz:5)
             let projection = projectionMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:100);
+            
             var viewProjectionMatrix = projection * inverseTranslate
+            
+            
+            ////////////////
+            //Creating Ray//
+            ////////////////
+            
+            // Get location of mouse
+            // find screen coordinates to mouse
+            // transform from screen coordinates to world space
+            
+            
             
             renderEncoder.pushDebugGroup("draw morphing cows")
             renderEncoder.setRenderPipelineState(pipelineState)
@@ -221,12 +302,12 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.setVertexBuffer(instanceBuffers[currentFrameIndex], offset: 0, at: 1)
             renderEncoder.setVertexBytes(&viewProjectionMatrix, length: MemoryLayout<float4x4>.size, at: 3)
             renderEncoder.setFragmentTexture(texture, at: 0)
-            
             renderEncoder.setDepthStencilState(depthStencilState)
             
-            
             let submesh =  mtkMesh.submeshes.first!
+//            print(submesh.indexBuffer.buffer, "Printing submesh")
             
+//            UnsafeBufferPointer(start: submesh, count:1);
             renderEncoder.drawIndexedPrimitives(type: .triangle, indexCount: submesh.indexCount, indexType: submesh.indexType, indexBuffer: submesh.indexBuffer.buffer, indexBufferOffset:submesh.indexBuffer.offset,
                 instanceCount:instanceCount)
             
