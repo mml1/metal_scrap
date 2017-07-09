@@ -5,7 +5,7 @@ import simd
 
 
 ///////////////////////////////////////////////////
-/////////////      Helper Class     //////////////
+/// Structs needed for Ray-Sphere Interaction ////
 /////////////////////////////////////////////////
 
 struct Sphere {
@@ -62,16 +62,7 @@ func translation(tx: Float, ty: Float, tz: Float) -> float4x4{
         ])
 }
 
-func testPrint(tx: Float, ty: Float, tz: Float) {
-    let complete = float4x4([
-        float4(1,0,0,0),
-        float4(0,1,0,0),
-        float4(0,0,1,0),
-        float4(tx,ty,tz,1)
-        ])
-    print(complete, "seeing what is in the matrix");
-//    return complete;
-}
+
 func projectionMatrix(rad: Float, ar: Float, nearZ:Float, farZ: Float) -> float4x4 {
     let tanHalfFOV = tan(rad/2)
     let zRange = nearZ - farZ
@@ -197,8 +188,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
 
         // creating sphere around bounding box
         cowBoundingSphere.center = (cowMeshBox.maxBounds + cowMeshBox.minBounds) * 0.5
-        let delta = cowBoundingSphere.center - cowMeshBox.minBounds
-        cowBoundingSphere.radius = length(delta)
+        cowBoundingSphere.radius = length(cowBoundingSphere.center - cowMeshBox.minBounds)
         
         
         
@@ -216,11 +206,8 @@ class GameViewController: NSViewController, MTKViewDelegate {
         
         instanceBuffers = buffers
         
-//        for i in 0..<instanceCount {
-
             cowRotations[0] = Float(drand48() * Double.pi * 2 );
             cowTranslations[0] = float3(Float(drand48()*7-3.5), Float(drand48()*7-3.5), Float(drand48()*7-3.5))
-//        }
         
         
         // depth buffering
@@ -247,17 +234,11 @@ class GameViewController: NSViewController, MTKViewDelegate {
     func update(timestep: Float){
         let contents = instanceBuffers[currentFrameIndex].contents().bindMemory(to: float4x4.self, capacity: instanceCount)
         
-//        for i in 0..<instanceCount {
             let position = cowTranslations[0]
             let modelMatrix = translation(tx: position.x,ty: position.y, tz: position.z)
         
-//        testPrint(tx: position.x,ty: position.y, tz: position.z);
-//            let modelMatrix = translation(tx: position.x,ty: position.y, tz: position.z) * rotationY(rad: cowRotations[0])
             cowRotations[0] += 3 * timestep; // 3radians per second
             contents[0] = modelMatrix;
-//            print(contents[1], "CHecking what is in the matrix")
-
-//        }
        
     }
     
@@ -305,9 +286,7 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.setDepthStencilState(depthStencilState)
             
             let submesh =  mtkMesh.submeshes.first!
-//            print(submesh.indexBuffer.buffer, "Printing submesh")
             
-//            UnsafeBufferPointer(start: submesh, count:1);
             renderEncoder.drawIndexedPrimitives(type: .triangle, indexCount: submesh.indexCount, indexType: submesh.indexType, indexBuffer: submesh.indexBuffer.buffer, indexBufferOffset:submesh.indexBuffer.offset,
                 instanceCount:instanceCount)
             
