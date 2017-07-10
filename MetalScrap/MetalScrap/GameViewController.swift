@@ -63,7 +63,7 @@ func translation(tx: Float, ty: Float, tz: Float) -> float4x4{
 }
 
 
-func projectionMatrix(rad: Float, ar: Float, nearZ:Float, farZ: Float) -> float4x4 {
+func perspectiveMatrix(rad: Float, ar: Float, nearZ:Float, farZ: Float) -> float4x4 {
     let tanHalfFOV = tan(rad/2)
     let zRange = nearZ - farZ
     
@@ -74,6 +74,17 @@ func projectionMatrix(rad: Float, ar: Float, nearZ:Float, farZ: Float) -> float4
         float4(0,0,((farZ*nearZ)/zRange),0)
         ])
 }
+
+func nonUniformScale(xs: Float, ys: Float) -> float4x4 {
+    return float4x4([
+        float4(xs,0,0,0),
+        float4(0,ys,0,0),
+        float4(0, 0, 1,0),
+        float4(0, 0, 0,1)
+        ])
+
+}
+
 
 class GameViewController: NSViewController, MTKViewDelegate {
 
@@ -106,15 +117,12 @@ class GameViewController: NSViewController, MTKViewDelegate {
     let maximumInflightFrames = 3
     var currentFrameIndex = 0
     var frameSemaphore: DispatchSemaphore! = nil
-    
-    // Getting coordinates of user mouseDown event in Window
-    override func mouseDown(with theEvent : NSEvent) {
-        super.mouseDown(with: theEvent)
-        print("left mouse")
-        let mousePosInWindow:NSPoint = theEvent.locationInWindow
-        print(mousePosInWindow)
-        
-    }
+
+    // matrix properties
+    var projectionMatrix:float4x4 = float4x4()
+    var viewMatrix:float4x4 = float4x4()
+
+
     
     override func viewDidLoad() {
         
@@ -130,6 +138,48 @@ class GameViewController: NSViewController, MTKViewDelegate {
         view.depthStencilPixelFormat = .depth32Float_stencil8
         loadAssets()
     }
+    ////////////////
+    //Creating Ray//
+    ////////////////
+    
+    // Get location of mouse
+    // find screen coordinates to mouse
+    
+    func inverseViewPort(windowCoordinate: NSPoint, z:Float) -> float4{
+        
+        let windowWidth = Float(self.view.bounds.size.width)
+        let windowHeight = Float(self.view.bounds.size.height)
+        
+        // scale windowCoordinates to normalized
+        
+        let flip = nonUniformScale(xs: 0.5, ys: 0.5)
+        let originTranslation = translation(tx: 0.5, ty: 0.5, tz: 0)
+        let viewPortScale = nonUniformScale(xs: windowWidth, ys: windowHeight)
+        
+        let viewPortTransform = viewPortScale * originTranslation * flip
+        
+        let inverseViewPortTransform = viewPortTransform.inverse
+        
+        let mouseCoordWindow = float4(Float(windowCoordinate.x), Float(windowCoordinate.y), z,1)
+        
+        
+        return inverseViewPortTransform * mouseCoordWindow
+    }
+    
+    override func mouseDown(with theEvent : NSEvent) {
+        super.mouseDown(with: theEvent)
+        let mousePosInWindow:NSPoint = theEvent.locationInWindow
+        let nearNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 0)
+        let farNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 1)
+        var rayEyeNear = viewMatrix.inverse * projectionMatrix.inverse * nearNdcMousePos
+
+        
+        rayEyeNear = float4(rayEye.x, rayEye.y, -1.0, 0.0)
+        print(rayEyeNear)
+
+        
+    }
+
     
     ///////////////////////////////////////////////////
     /////////////        Assets       ////////////////
@@ -259,18 +309,18 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.label = "render encoder"
             
             
-            let inverseTranslate = translation(tx:0, ty:0, tz:5)
-            let projection = projectionMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:100);
+            viewMatrix = translation(tx:0, ty:0, tz:5)
+            projectionMatrix = perspectiveMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:100);
             
-            var viewProjectionMatrix = projection * inverseTranslate
+            
+            var viewProjectionMatrix = projectionMatrix * viewMatrix
             
             
             ////////////////
-            //Creating Ray//
+            //Using Ray//
             ////////////////
             
-            // Get location of mouse
-            // find screen coordinates to mouse
+
             // transform from screen coordinates to world space
             
             
