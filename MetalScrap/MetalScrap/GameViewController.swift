@@ -22,10 +22,10 @@ struct Sphere {
 }
 
 struct Ray {
-    public var point:float3 = float3(0,0,0)
-    public var direction:float3 = float3(0,0,0)
+    public var point:float4 = float4(0.0,0.0,0.0,0.0)
+    public var direction:float4 = float4(0.0,0.0,0.0,0.0)
     
-    public init(_point: float3, _direction: float3) {
+    public init(_point: float4, _direction: float4) {
         point = _point
         direction = _direction
     }
@@ -142,8 +142,6 @@ class GameViewController: NSViewController, MTKViewDelegate {
     //Creating Ray//
     ////////////////
     
-    // Get location of mouse
-    // find screen coordinates to mouse
     
     func inverseViewPort(windowCoordinate: NSPoint, z:Float) -> float4{
         
@@ -172,11 +170,18 @@ class GameViewController: NSViewController, MTKViewDelegate {
         let nearNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 0)
         let farNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 1)
         var rayEyeNear = viewMatrix.inverse * projectionMatrix.inverse * nearNdcMousePos
+        var rayEyeFar = viewMatrix.inverse * projectionMatrix.inverse * farNdcMousePos
 
         
-        rayEyeNear = float4(rayEye.x, rayEye.y, -1.0, 0.0)
-        print(rayEyeNear)
+        rayEyeNear = float4(rayEyeNear.x, rayEyeNear.y, -1.0, 0.0)
+        rayEyeFar = float4(rayEyeFar.x, rayEyeFar.y, -1.0, 0.0)
 
+//        let directionOfRay = float4((rayEyeFar.x - rayEyeNear.x), (rayEyeFar.y - rayEyeNear.y), -1.0, 0.0);
+        let rayPoint = float4(0.0, 0.0, 0.0, 0.0);
+        
+//        let rayIntoFrame = Ray(_point: rayPoint, _direction: directionOfRay);
+        
+//        print((rayEyeFar.x, rayEyeNear.x));
         
     }
 
