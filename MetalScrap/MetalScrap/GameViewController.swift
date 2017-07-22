@@ -85,6 +85,14 @@ func nonUniformScale(xs: Float, ys: Float) -> float4x4 {
 
 }
 
+func raySphereInterection(ray: Ray, sphere: Sphere) -> Bool {
+    // Did the ray intersect the sphere
+    // TODO NEXT: Add algorithm and conditions here
+    
+
+    return true
+}
+
 
 class GameViewController: NSViewController, MTKViewDelegate {
 
@@ -112,6 +120,9 @@ class GameViewController: NSViewController, MTKViewDelegate {
     
     var cowBoundingSphere:Sphere = Sphere()
     var rayForIntersection:Ray = Ray()
+    var rayNearMouse:Ray = Ray()
+    var rayFarMouse:Ray = Ray()
+    var hit:Bool = false
     
     // used for frames
     let maximumInflightFrames = 3
@@ -173,15 +184,13 @@ class GameViewController: NSViewController, MTKViewDelegate {
         var rayEyeFar = viewMatrix.inverse * projectionMatrix.inverse * farNdcMousePos
 
         
-        rayEyeNear = float4(rayEyeNear.x, rayEyeNear.y, -1.0, 0.0)
+        rayEyeNear = float4(rayEyeNear.x, rayEyeNear.y, 0.0, 0.0)
         rayEyeFar = float4(rayEyeFar.x, rayEyeFar.y, -1.0, 0.0)
+        
+        rayNearMouse = Ray(_point: rayEyeNear, _direction: float4(0.0,0.0,-1.0, 0.0))
+        rayFarMouse = Ray(_point: rayEyeFar, _direction: float4(0.0,0.0,-1.0, 0.0))
 
-//        let directionOfRay = float4((rayEyeFar.x - rayEyeNear.x), (rayEyeFar.y - rayEyeNear.y), -1.0, 0.0);
-        let rayPoint = float4(0.0, 0.0, 0.0, 0.0);
-        
-//        let rayIntoFrame = Ray(_point: rayPoint, _direction: directionOfRay);
-        
-//        print((rayEyeFar.x, rayEyeNear.x));
+        print((rayNearMouse, rayFarMouse));
         
     }
 
@@ -321,19 +330,15 @@ class GameViewController: NSViewController, MTKViewDelegate {
             var viewProjectionMatrix = projectionMatrix * viewMatrix
             
             
-            ////////////////
-            //Using Ray//
-            ////////////////
-            
-
-            // transform from screen coordinates to world space
             
             
             
             renderEncoder.pushDebugGroup("draw morphing cows")
             renderEncoder.setRenderPipelineState(pipelineState)
             
-            
+            hit = raySphereInterection(ray: rayNearMouse, sphere: cowBoundingSphere)
+            print(hit)
+
             renderEncoder.setVertexBuffer(mtkMesh.vertexBuffers.first!.buffer, offset: mtkMesh.vertexBuffers.first!.offset, at: 0)
             renderEncoder.setVertexBuffer(instanceBuffers[currentFrameIndex], offset: 0, at: 1)
             renderEncoder.setVertexBytes(&viewProjectionMatrix, length: MemoryLayout<float4x4>.size, at: 3)
