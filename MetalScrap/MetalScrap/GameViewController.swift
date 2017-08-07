@@ -177,29 +177,16 @@ class GameViewController: NSViewController, MTKViewDelegate {
     
     override func mouseDown(with theEvent : NSEvent) {
         super.mouseDown(with: theEvent)
+        
+        // Calculating the Ray direction
         let mousePosInWindow:NSPoint = theEvent.locationInWindow
-//        let nearNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 0)
         let farNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 1)
-//        var rayEyeNear = viewMatrix.inverse * projectionMatrix.inverse * nearNdcMousePos
-//        var rayEyeFar = viewMatrix.inverse * projectionMatrix.inverse * farNdcMousePos
-        
-//        var rayEyeNear = projectionMatrix.inverse * nearNdcMousePos
         var rayEyeFar = projectionMatrix.inverse * farNdcMousePos
-
-        
-//        rayEyeNear = rayEyeNear * (1.0 / rayEyeNear.w);
-//        rayEyeFar = rayEyeFar * (1.0 / rayEyeFar.w);
-        
-//        let rayEyeNearCamToWor = viewMatrix.inverse * rayEyeNear
-        
         rayEyeFar = float4(rayEyeFar.x,rayEyeFar.y,-1.0,0.0);
-        
-        
         let rayEyeFarCamToWor = viewMatrix.inverse * rayEyeFar
         let rayDirection = normalize(rayEyeFarCamToWor)
-    
-//        
-//        rayNearMouse = Ray(_point: rayEyeNear, _direction: float4(0.0,0.0,-1.0, 0.0))
+
+        // Create Ray from camera location with calculated clickedPointRayDirection
         rayFarMouse = Ray(_point: float4(0.0,0.0,5,1.0), _direction: rayDirection)
         print(rayFarMouse)
     }
