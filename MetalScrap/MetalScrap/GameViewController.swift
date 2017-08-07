@@ -85,13 +85,13 @@ func nonUniformScale(xs: Float, ys: Float) -> float4x4 {
 
 }
 
-func raySphereInterection(ray: Ray, sphere: Sphere) -> Bool {
-    // Did the ray intersect the sphere
-    // TODO NEXT: Add algorithm and conditions here
-    
-
-    return true
-}
+//func raySphereInterection(ray: Ray, sphere: Sphere) -> Bool {
+//    // Did the ray intersect the sphere
+//    // TODO NEXT: Add algorithm and conditions here
+//    
+//
+//    //return true
+//}
 
 
 class GameViewController: NSViewController, MTKViewDelegate {
@@ -178,20 +178,30 @@ class GameViewController: NSViewController, MTKViewDelegate {
     override func mouseDown(with theEvent : NSEvent) {
         super.mouseDown(with: theEvent)
         let mousePosInWindow:NSPoint = theEvent.locationInWindow
-        let nearNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 0)
+//        let nearNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 0)
         let farNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 1)
-        var rayEyeNear = viewMatrix.inverse * projectionMatrix.inverse * nearNdcMousePos
-        var rayEyeFar = viewMatrix.inverse * projectionMatrix.inverse * farNdcMousePos
+//        var rayEyeNear = viewMatrix.inverse * projectionMatrix.inverse * nearNdcMousePos
+//        var rayEyeFar = viewMatrix.inverse * projectionMatrix.inverse * farNdcMousePos
+        
+//        var rayEyeNear = projectionMatrix.inverse * nearNdcMousePos
+        var rayEyeFar = projectionMatrix.inverse * farNdcMousePos
 
         
-        rayEyeNear = float4(rayEyeNear.x, rayEyeNear.y, 0.0, 0.0)
-        rayEyeFar = float4(rayEyeFar.x, rayEyeFar.y, -1.0, 0.0)
+//        rayEyeNear = rayEyeNear * (1.0 / rayEyeNear.w);
+//        rayEyeFar = rayEyeFar * (1.0 / rayEyeFar.w);
         
-        rayNearMouse = Ray(_point: rayEyeNear, _direction: float4(0.0,0.0,-1.0, 0.0))
-        rayFarMouse = Ray(_point: rayEyeFar, _direction: float4(0.0,0.0,-1.0, 0.0))
-
-        print((rayNearMouse, rayFarMouse));
+//        let rayEyeNearCamToWor = viewMatrix.inverse * rayEyeNear
         
+        rayEyeFar = float4(rayEyeFar.x,rayEyeFar.y,-1.0,0.0);
+        
+        
+        let rayEyeFarCamToWor = viewMatrix.inverse * rayEyeFar
+        let rayDirection = normalize(rayEyeFarCamToWor)
+    
+//        
+//        rayNearMouse = Ray(_point: rayEyeNear, _direction: float4(0.0,0.0,-1.0, 0.0))
+        rayFarMouse = Ray(_point: float4(0.0,0.0,5,1.0), _direction: rayDirection)
+        print(rayFarMouse)
     }
 
     
@@ -336,8 +346,8 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.pushDebugGroup("draw morphing cows")
             renderEncoder.setRenderPipelineState(pipelineState)
             
-            hit = raySphereInterection(ray: rayNearMouse, sphere: cowBoundingSphere)
-            print(hit)
+//            hit = raySphereInterection(ray: rayNearMouse, sphere: cowBoundingSphere)
+//            print(hit)
 
             renderEncoder.setVertexBuffer(mtkMesh.vertexBuffers.first!.buffer, offset: mtkMesh.vertexBuffers.first!.offset, at: 0)
             renderEncoder.setVertexBuffer(instanceBuffers[currentFrameIndex], offset: 0, at: 1)
