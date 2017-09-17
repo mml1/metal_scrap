@@ -286,13 +286,28 @@ class GameViewController: NSViewController, MTKViewDelegate {
         //////////////////////////////////////////////////////
         
         let cowMeshBox = mdlMesh.boundingBox
+        
+        print("///////////////////////////////////////////////////")
+        
+//      print(mdlMesh.vertexDescriptor)
+        print(mdlMesh.vertexDescriptor.attributes[0])
+        
+//        print(mdlMesh[0])
+
+
+//        print(cowMeshBox)
+
+        //BUG Bounding Box not in correct location?
 
         // creating sphere around bounding box
+        
+//        print(cowMeshBox.maxBounds, cowMeshBox.maxBounds + cowMeshBox.minBounds, cowMeshBox.minBounds)
+        
         cowBoundingSphere.center = (cowMeshBox.maxBounds + cowMeshBox.minBounds) * 0.5
         cowBoundingSphere.radius = length(cowBoundingSphere.center - cowMeshBox.minBounds)
         
-        print("inl")
-        print(cowBoundingSphere)
+//        print("inl")
+//        print(cowBoundingSphere)
         
         
         mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
@@ -367,11 +382,8 @@ class GameViewController: NSViewController, MTKViewDelegate {
             projectionMatrix = perspectiveMatrix(rad: Float.pi/2, ar: Float(self.view.bounds.size.width/self.view.bounds.size.height), nearZ:0.1, farZ:100);
             
             
+            
             var viewProjectionMatrix = projectionMatrix * viewMatrix
-            
-            
-            
-            
             
             renderEncoder.pushDebugGroup("draw morphing cows")
             renderEncoder.setRenderPipelineState(pipelineState)
