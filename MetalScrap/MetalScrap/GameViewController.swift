@@ -22,10 +22,10 @@ struct Sphere {
 }
 
 struct Ray {
-    public var point:float4 = float4(0.0,0.0,0.0,0.0)
-    public var direction:float4 = float4(0.0,0.0,0.0,0.0)
+    public var point:float3 = float3(0.0,0.0,0.0)
+    public var direction:float3 = float3(0.0,0.0,0.0)
     
-    public init(_point: float4, _direction: float4) {
+    public init(_point: float3, _direction: float3) {
         point = _point
         direction = _direction
     }
@@ -84,14 +84,50 @@ func nonUniformScale(xs: Float, ys: Float) -> float4x4 {
         ])
 
 }
+// Helper fxns
 
-//func raySphereInterection(ray: Ray, sphere: Sphere) -> Bool {
-//    // Did the ray intersect the sphere
-//    // TODO NEXT: Add algorithm and conditions here
+func expn(num:Float) ->Float{
+    return num*num
+}
+func raySphereInterection(ray: Ray, sphere: Sphere) -> Bool {
+    print("Inside raySpehere fxn");
+    // B = 2 * (Xd * (X0 - Xc) + Yd * (Y0 - Yc) + Zd * (Z0 - Zc))
+    // C = (X0 - Xc)^2 + (Y0 - Yc)^2 + (Z0 - Zc)^2 - Sr^2
+
+    // Shorten variables for ray and sphere
+    let rPt = ray.point
+    let rDr = ray.direction
+    let sc = sphere.center
+    let sr = sphere.radius
+    
+//    print(rDr.x,rDr.y,rDr.z)
+//    print((rPt.x - sc.x),(rPt.y - sc.y),(rPt.z - sc.z))
 //    
-//
-//    //return true
-//}
+    // Creating the quadratic formula
+    let b = 2 * ((rDr.x * (rPt.x - sc.x)) + (rDr.y * (rPt.y - sc.y)) + (rDr.z * (rPt.z - sc.z)))
+//    let c = ((rPt.x - sc.x)*(rPt.x - sc.x)) + ((rPt.y - sc.y)*(rPt.y - sc.y)) + ((rPt.z - sc.z)*(rPt.z - sc.z))-(sr*sr)
+    let c = expn(num:(rPt.x - sc.x)) + expn(num:(rPt.y - sc.y)) + expn(num:(rPt.z - sc.z)) - expn(num:sr)
+
+    
+//    print(b,c)
+    let radicand = expn(num:b)-(4*c)
+
+    print(b*b,c)
+    // Did the ray intersect the sphere
+    if radicand >= 0 {
+    
+        let tO = (-1*b + sqrt(radicand))/2
+        if tO >= 0{
+            return true
+        }
+        
+        return false
+    } else {
+        
+        return false
+    }
+    
+}
 
 
 class GameViewController: NSViewController, MTKViewDelegate {
@@ -149,10 +185,6 @@ class GameViewController: NSViewController, MTKViewDelegate {
         view.depthStencilPixelFormat = .depth32Float_stencil8
         loadAssets()
     }
-    ////////////////
-    //Creating Ray//
-    ////////////////
-    
     
     func inverseViewPort(windowCoordinate: NSPoint, z:Float) -> float4{
         
@@ -175,23 +207,31 @@ class GameViewController: NSViewController, MTKViewDelegate {
         return inverseViewPortTransform * mouseCoordWindow
     }
     
+    ////////////////
+    //Creating Ray//
+    ////////////////
+    
+
     override func mouseDown(with theEvent : NSEvent) {
         super.mouseDown(with: theEvent)
-        
+
         // Calculating the Ray direction
         let mousePosInWindow:NSPoint = theEvent.locationInWindow
         let farNdcMousePos = inverseViewPort(windowCoordinate: mousePosInWindow,z: 1)
         var rayEyeFar = projectionMatrix.inverse * farNdcMousePos
         rayEyeFar = float4(rayEyeFar.x,rayEyeFar.y,-1.0,0.0);
         let rayEyeFarCamToWor = viewMatrix.inverse * rayEyeFar
-        let rayDirection = normalize(rayEyeFarCamToWor)
-
+        let rayDirection = normalize(float3(rayEyeFarCamToWor.x, rayEyeFarCamToWor.y, rayEyeFarCamToWor.z))
+        
         // Create Ray from camera location with calculated clickedPointRayDirection
-        rayFarMouse = Ray(_point: float4(0.0,0.0,5,1.0), _direction: rayDirection)
-        print(rayFarMouse)
+        rayFarMouse = Ray(_point: float3(0.0,0.0,5.0), _direction: rayDirection);
+        
+        print("MD")
+        print(cowBoundingSphere)
+        print(raySphereInterection(ray: rayFarMouse, sphere: cowBoundingSphere));
+        
     }
 
-    
     ///////////////////////////////////////////////////
     /////////////        Assets       ////////////////
     /////////////////////////////////////////////////
@@ -251,19 +291,22 @@ class GameViewController: NSViewController, MTKViewDelegate {
         cowBoundingSphere.center = (cowMeshBox.maxBounds + cowMeshBox.minBounds) * 0.5
         cowBoundingSphere.radius = length(cowBoundingSphere.center - cowMeshBox.minBounds)
         
+        print("inl")
+        print(cowBoundingSphere)
         
         
         mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
 
-        
-        cowRotations = [Float](repeatElement(0, count: instanceCount))
-        cowTranslations = [float3](repeatElement(float3(), count: instanceCount))
         
         // Buffers needed to avoid tearing
         var buffers = [MTLBuffer]()
         for _ in 0..<maximumInflightFrames {
             buffers.append(device.makeBuffer(length: MemoryLayout<float4x4>.stride * instanceCount, options: []))
         }
+        
+        //Rotations and translations
+        cowRotations = [Float](repeatElement(0, count: instanceCount))
+        cowTranslations = [float3](repeatElement(float3(), count: instanceCount))
         
         instanceBuffers = buffers
         
@@ -333,9 +376,6 @@ class GameViewController: NSViewController, MTKViewDelegate {
             renderEncoder.pushDebugGroup("draw morphing cows")
             renderEncoder.setRenderPipelineState(pipelineState)
             
-//            hit = raySphereInterection(ray: rayNearMouse, sphere: cowBoundingSphere)
-//            print(hit)
-
             renderEncoder.setVertexBuffer(mtkMesh.vertexBuffers.first!.buffer, offset: mtkMesh.vertexBuffers.first!.offset, at: 0)
             renderEncoder.setVertexBuffer(instanceBuffers[currentFrameIndex], offset: 0, at: 1)
             renderEncoder.setVertexBytes(&viewProjectionMatrix, length: MemoryLayout<float4x4>.size, at: 3)
