@@ -3,7 +3,56 @@ import Cocoa
 import MetalKit
 import simd
 
-
+///////////////////////////////////////////////////
+////////////    Needed for explosion   ///////////
+/////////////////////////////////////////////////
+class DynamicMesh {
+    
+    // turns a MDLMesh into Dynamic Mesh
+    var vertexBuffers: [MTLBuffer]
+    var currentBufferIndex:Int = 0
+    
+    struct FaceProperties {
+        var position: float3 = float3(0,0,0) //simd framework?
+        var velocity: float3 = float3(0,0,0)
+        var rotationAngle: Float = 0
+        var rotationSpeed: Float = 0
+        var rotationAxis: float3 = float3(0,0,0)
+        
+        //computed property
+        var modelMatrix:float4x4{
+        
+            let mat = float4x4()
+            return mat
+        }
+    }
+    var faceProperties: [FaceProperties] = []
+    
+    init(mdlMesh: MDLMesh, device: MTLDevice){
+        let submesh = mdlMesh.submeshes?.firstObject as! MDLSubmesh
+        vertexBuffers = []
+        
+        for i in 0..<2 {
+            let buffer = device.makeBuffer(length: submesh.indexCount / 2 * 32, options: [])
+            vertexBuffers.append(buffer)
+        }
+        
+        /* Next steps
+           1) Iterate over submesh index buffer, copying vertices from the mesh's vertex buffer into the first
+              dynamic mesh's vertex buffer
+           2) Initialize one FaceProperties struct per face, using some fraction of the face normal as the initial velocity
+              and a random unit vector as the rotation axis
+         
+           For each timestep:
+           1) Update the face properties by multiplying the face velocity by the timestep and adding it to the face position
+              Do the same for the rotation by multiplying the rotation speed by the timestep
+           2) Write the updated face properties into the dynamic mesh's uniform buffers (you'll need to create these)
+           3) Draw without index buffer, since all vertices now evolve independently
+         */
+    
+    }
+    
+}
 ///////////////////////////////////////////////////
 /// Structs needed for Ray-Sphere Interaction ////
 /////////////////////////////////////////////////
@@ -325,8 +374,9 @@ class GameViewController: NSViewController, MTKViewDelegate {
         
         instanceBuffers = buffers
         
-            cowRotations[0] = Float(drand48() * Double.pi * 2 );
-            cowTranslations[0] = float3(Float(drand48()*7-3.5), Float(drand48()*7-3.5), Float(drand48()*7-3.5))
+        cowRotations[0] = Float(drand48() * Double.pi * 2 );
+        cowTranslations[0] = float3(Float(drand48()*7-3.5), Float(drand48()*7-3.5), Float(drand48()*7-3.5))
+        cowBoundingSphere.center += cowTranslations[0]
         
         
         // depth buffering
